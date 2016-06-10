@@ -36,7 +36,7 @@ function [embedding_layer_state, hidden_layer_state, output_layer_state] = ...
 
 [numwords, batchsize] = size(input_batch);
 [vocab_size, numhid1] = size(word_embedding_weights);
-numhid2 = size(embed_to_hid_weights, 2);
+%numhid2 = size(embed_to_hid_weights, 2);
 
 %% COMPUTE STATE OF WORD EMBEDDING LAYER.
 % Look up the inputs word indices in the word_embedding_weights matrix.
@@ -48,7 +48,6 @@ embedding_layer_state = reshape(...
 % Compute inputs to hidden units.
 inputs_to_hidden_units = embed_to_hid_weights' * embedding_layer_state + ...
   repmat(hid_bias, 1, batchsize);
-
 % Apply logistic activation function.
 % FILL IN CODE. Replace the line below by one of the options.
 hidden_layer_state = 1 ./ (1 + exp(-inputs_to_hidden_units));

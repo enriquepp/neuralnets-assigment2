@@ -32,6 +32,7 @@ show_validation_CE_after = 1000;
   test_input, test_target, vocab] = load_data(batchsize);
 [numwords, batchsize, numbatches] = size(train_input); 
 vocab_size = size(vocab, 2);
+clear data; % EPP
 
 % INITIALIZE WEIGHTS AND BIASES.
 word_embedding_weights = init_wt * randn(vocab_size, numhid1);
@@ -163,13 +164,17 @@ for epoch = 1:epochs
       if OctaveMode
         fflush(1);
       end
-      [embedding_layer_state, hidden_layer_state, output_layer_state] = ...
+      [~, ~, output_layer_state] = ...
         fprop(valid_input, word_embedding_weights, embed_to_hid_weights,...
               hid_to_output_weights, hid_bias, output_bias);
       datasetsize = size(valid_input, 2);
       expanded_valid_target = expansion_matrix(:, valid_target);
-      CE = -sum(sum(...
-        expanded_valid_target .* log(output_layer_state + tiny))) /datasetsize;
+      CE = 0;
+      for n = 1:datasetsize
+          CE = CE - sum(...
+              expanded_valid_target(:,n) .* log(output_layer_state(:, n) + tiny));
+      end
+      CE = CE / datasetsize;
       fprintf(1, ' Validation CE %.3f\n', CE);
       if OctaveMode
         fflush(1);
@@ -183,36 +188,46 @@ if OctaveMode
   fflush(1);
 end
 fprintf(1, 'Final Training CE %.3f\n', trainset_CE);
+clear train_input;
+clear train_target;
 
 % EVALUATE ON VALIDATION SET.
 fprintf(1, '\rRunning validation ...');
 if OctaveMode
   fflush(1);
 end
-[embedding_layer_state, hidden_layer_state, output_layer_state] = ...
+[~, ~, output_layer_state] = ...
   fprop(valid_input, word_embedding_weights, embed_to_hid_weights,...
         hid_to_output_weights, hid_bias, output_bias);
 datasetsize = size(valid_input, 2);
 expanded_valid_target = expansion_matrix(:, valid_target);
-CE = -sum(sum(...
-  expanded_valid_target .* log(output_layer_state + tiny))) / datasetsize;
+for n = 1:datasetsize
+  CE = CE - sum(...
+      expanded_valid_target(:,n) .* log(output_layer_state(:, n) + tiny));
+end
+CE = CE / datasetsize;
 fprintf(1, '\rFinal Validation CE %.3f\n', CE);
 if OctaveMode
   fflush(1);
 end
+clear valid_input;
+clear valid_target;
 
 % EVALUATE ON TEST SET.
 fprintf(1, '\rRunning test ...');
 if OctaveMode
   fflush(1);
 end
-[embedding_layer_state, hidden_layer_state, output_layer_state] = ...
+[~, ~, output_layer_state] = ...
   fprop(test_input, word_embedding_weights, embed_to_hid_weights,...
         hid_to_output_weights, hid_bias, output_bias);
 datasetsize = size(test_input, 2);
 expanded_test_target = expansion_matrix(:, test_target);
-CE = -sum(sum(...
-  expanded_test_target .* log(output_layer_state + tiny))) / datasetsize;
+for n = 1:datasetsize
+  CE = CE - sum(...
+      expanded_test_target(:,n) .* log(output_layer_state(:, n) + tiny));
+end
+CE = CE / datasetsize;
 fprintf(1, '\rFinal Test CE %.3f\n', CE);
 if OctaveMode
   fflush(1);
